@@ -1,0 +1,32 @@
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.FileWriter;
+import java.util.ArrayList;
+/**
+ *
+ * @author DELL
+ */
+public class SaveDiaryEntry {
+    
+    public static void saveEntry(DiaryEntry entry) {
+        try (PrintWriter print = new PrintWriter(new FileWriter("diary.csv", true))) {
+            print.println(entry.getDate() + "," + entry.getTitle() + "," + entry.getContent());
+        } catch (IOException e) {
+            System.out.println("Error saving entry: " + e.getMessage());
+        }
+    }
+    public static void saveAllEntries(ArrayList<DiaryEntry> entries) {
+        try (FileWriter writer = new FileWriter("diary.csv")) { // Overwrite mode
+            for (DiaryEntry entry : entries) {
+                writer.write(entry.getDate() + "," + entry.getTitle() + "," + entry.getContent() + "\n");
+            }
+        } catch (IOException e) {
+            System.out.println("Error saving entries: " + e.getMessage());
+        }
+    }
+// testing
+    public static void main(String[] args) {
+        DiaryEntry entry = new DiaryEntry ("24/12/2023", "Page Two", "Today we worked on our first project!");
+        SaveDiaryEntry.saveEntry(entry);
+    }
+}

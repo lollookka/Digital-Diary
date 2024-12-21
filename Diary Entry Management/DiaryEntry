@@ -1,0 +1,80 @@
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.Scanner;
+/**
+ *
+ * @author DELL
+ */
+public class DiaryEntry {
+    private String date;
+    private String title;
+    private String content;
+    private long createdOn;
+    private long deletedOn;
+    // constructer method: to create objects 
+    // this. tells java to use the fields from the class instead of the parameter
+    public DiaryEntry (String date, String title, String content){
+        this.date = date;
+        this.title = title;
+        this.content = content;
+        this.createdOn = System.currentTimeMillis();
+    }
+    public void deleteEntry(){
+        this.deletedOn = System.currentTimeMillis();
+        RecycleBin.addEntry(this);
+    }
+    public boolean olderThan30Days(){
+        if (deletedOn == 0) return false;
+        long current_time = System.currentTimeMillis();
+        long time_difference = current_time - deletedOn;
+        long days_in_ms = 30L * 24 * 60 * 60 * 1000;
+        return time_difference > days_in_ms;
+        }
+    public void recoverEntry(){
+        this.deletedOn = 0;
+    }
+    // getter method: to return the value of the fields
+    public long getDeletedOn(){
+        return deletedOn;
+    }
+    public String getDate(){
+        return date;
+    }
+    public String getTitle(){
+        return title;
+    }
+    public String getContent(){
+        return content;
+    }
+    // setter method: changes the values of a field
+    public void setDate (String date){
+        this.date = date;
+    }
+    public void setTitle (String title){
+        this.title = title;
+    }
+    public void setContent (String content){
+        this.content = content;
+    }
+    @Override
+    // toString method: returns the content in a readable String format
+    public String toString(){
+        return "Date: " + date + "\nTitle: " + title + "\nBody: " +content;
+    }
+   
+    public static void main(String[] args) {
+        //testing DiaryEntry
+        DiaryEntry entry = new DiaryEntry ("23.12.2024", "Page one", "Hello!");
+        System.out.println(entry.toString());
+        
+        entry.setTitle("Updated Diary.");
+        entry.setContent("Dear Diary!");
+        
+        System.out.println();
+        
+        System.out.println("Updated entry: ");
+        System.out.println(entry.toString());
+        
+        }
+}

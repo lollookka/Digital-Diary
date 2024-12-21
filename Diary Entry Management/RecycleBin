@@ -1,0 +1,49 @@
+import java.util.ArrayList;
+import java.util.Iterator;
+/**
+ *
+ * @author DELL
+ */
+public class RecycleBin {
+    private static ArrayList<DiaryEntry> trashbin = new ArrayList<>();
+    // add an entry to the recycle bin
+    public static void addEntry(DiaryEntry entry){
+        trashbin.add(entry);
+    }
+    // remove a specific entry from the recycle bin
+    public static void removeEntry(DiaryEntry entry){
+        trashbin.remove(entry);
+    }
+    // get all entries in the recycle bin
+    public static ArrayList<DiaryEntry> getTrashBin(){
+        return trashbin;
+    }
+    // delete entries older than 30 days
+    public static void deleteOldEntries() {
+        Iterator<DiaryEntry> iterator = trashbin.iterator();
+        while (iterator.hasNext()) {
+            DiaryEntry entry = iterator.next();
+            if (entry.olderThan30Days()) {
+                iterator.remove();
+            }
+        }
+    }
+    // View all entries in the recycle bin
+    public static void viewRecycleBin() {
+        if (trashbin.isEmpty()) {
+            System.out.println("Recycle Bin is empty.");
+        } else {
+            System.out.println("Entries in the Recycle Bin:");
+            for (DiaryEntry entry : trashbin) {
+                System.out.println(entry);
+            }
+        }
+    }
+    // recover all entries from the recycle bin 
+    public static ArrayList<DiaryEntry> recoverEntry(){
+         ArrayList<DiaryEntry> recovered = new ArrayList<>(trashbin);
+            trashbin.clear(); 
+            return recovered;
+    }
+
+}

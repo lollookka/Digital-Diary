@@ -1,0 +1,126 @@
+import java.util.Scanner;
+import java.util.ArrayList;
+/**
+ *
+ * @author DELL
+ */
+public class Main {
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner (System.in);
+        while(true){
+            System.out.println("1 -> Create New Entry");
+            System.out.println("2 -> View All Entries");
+            System.out.println("3 -> Edit Entry");
+            System.out.println("4 -> Delete Entry");
+            System.out.println("5 -> Recycle Bin operations");
+            System.out.println("6 -> Exit");
+            System.out.print("Choose an Option: ");
+            int option = scanner.nextInt();
+            scanner.nextLine();
+            switch (option){
+                case 1:
+                    System.out.print("Enter Date (DD-MM-YYYY): ");
+                    String date = scanner.nextLine();
+                    System.out.print("Enter Title: ");
+                    String title = scanner.nextLine();
+                    System.out.print("Enter Content: ");
+                    String content = scanner.nextLine();
+                    DiaryEntry entry = new DiaryEntry(date, title, content);
+                    SaveDiaryEntry.saveEntry(entry);
+                    System.out.println("Entry added.");
+                    break;
+                
+                case 2:
+                    ArrayList<DiaryEntry> entries = ReadDiaryEntry.readDiaryEntry();
+                    if (entries.isEmpty()){
+                        System.out.println("No past entries found.");
+                    } else {
+                        for (DiaryEntry entry1 : entries){
+                            System.out.println(entry1);
+                            System.out.println("---------------------");
+                        }
+                        
+                    }
+                    break;
+                
+                case 3:
+                    System.out.print("Enter the Date of the entry you want to edit (DD-MM-YYYY): ");
+                    String editDate = scanner.nextLine();
+                    System.out.print("Enter new Title: ");
+                    String newTitle = scanner.nextLine();
+                    System.out.print("Enter new Content: ");
+                    String newContent = scanner.nextLine();
+                    EditDiaryEntry.editEntry(editDate, newTitle, newContent);
+                    break;
+                
+                case 4:
+                    System.out.print("Enter the Date of the entry you want to delete (DD-MM-YYYY): ");
+                    String dateOfEntry = scanner.nextLine();
+                    ArrayList<DiaryEntry> entry_2 = ReadDiaryEntry.readDiaryEntry();
+                    boolean found = false;
+                    for (DiaryEntry e : entry_2) {
+                        if (e.getDate().equals(dateOfEntry)) {
+                            RecycleBin.addEntry(e);
+                            entry_2.remove(e);
+                            System.out.println("Entry moved to the recycle bin.");
+                            SaveDiaryEntry.saveAllEntries(entry_2); // Update the CSV file
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (!found) {
+                        System.out.println("Entry not found.");
+                    }
+                    break;
+                    
+                case 5:
+                   boolean recycleBin = true;
+                   while (recycleBin){
+                       System.out.println("\n Recycle Bin Functions: ");
+                       System.out.println("1 -> View Recycle Bin");
+                       System.out.println("2 -> Recover Entries");
+                       System.out.println("3 -> Remove Old Entries");
+                       System.out.println("4 -> Go Back to Main Menu");
+                       System.out.print("Choose an Option:");
+                       int option_2 = scanner.nextInt();
+                       scanner.nextLine();
+                       switch (option_2){
+                           case 1: 
+                               RecycleBin.viewRecycleBin();
+                               break;
+                           case 2:
+                              ArrayList<DiaryEntry> recoveredEntries = RecycleBin.recoverEntry();
+                              if (recoveredEntries.isEmpty()){
+                                  System.out.println("Recycle Bin is empty.");
+                              } else {
+                                  ArrayList<DiaryEntry> entry_4 = ReadDiaryEntry.readDiaryEntry();
+                                  entry_4.addAll(recoveredEntries);
+                                  SaveDiaryEntry.saveAllEntries(entry_4);
+                                  System.out.println("All entries added back to diary");
+                              }
+                              break;
+                           case 3 :
+                               RecycleBin.deleteOldEntries();
+                               System.out.println("Old entries removed from recycle bin");
+                               break;
+                           case 4 :
+                               recycleBin = false;
+                               System.out.println("Returning to main menu...");
+                               break;
+                           default : 
+                               System.out.println("Invalid option, try again.");
+                       }
+                   }
+                    break;
+                    
+                case 6 :
+                    System.out.println("You have exited.");
+                    return;
+                    
+                default :
+                    System.out.println("Invalid option. Please try again");
+                    break;
+            }    
+        }
+    }
+}

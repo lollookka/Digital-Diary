@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.AnchorPane?>
+
+
+<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="631.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="application.AddEntryScreencontroller">
+   <children>
+      <TextField fx:id="dateField" layoutY="1.0" prefHeight="26.0" prefWidth="600.0" promptText="Date (DD-MM-YYYY)" />
+      <TextField fx:id="titleField" layoutY="27.0" prefHeight="26.0" prefWidth="600.0" promptText="Title" />
+      <TextArea fx:id="contentArea" layoutY="53.0" prefHeight="298.0" prefWidth="600.0" />
+      <Button fx:id="saveButton" layoutX="46.0" layoutY="591.0" mnemonicParsing="false" onAction="#saveEntry" text="Save" />
+      <Button fx:id="uploadImageButton" layoutX="254.0" layoutY="591.0" mnemonicParsing="false" onAction="#uploadImage" text="Upload Image" />
+      <Button fx:id="backButton" layoutX="508.0" layoutY="591.0" mnemonicParsing="false" onAction="#goBackToMain" text="Back" />
+      <ImageView fx:id="imageView" fitHeight="200.0" fitWidth="200.0" layoutX="187.0" layoutY="351.0" pickOnBounds="true" preserveRatio="true" />
+      <Label fx:id="errorLabel" layoutX="2.0" layoutY="562.0" prefHeight="18.0" prefWidth="600.0" visible="false" />
+   </children>
+</AnchorPane>

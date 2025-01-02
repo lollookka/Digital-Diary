@@ -5,6 +5,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class DiaryDataStore {
+
     private static final String BASE_PATH = "data";  // Directory to store user-specific data
     private static final String RECYCLE_BIN_PATH = "recycle_bin.csv";
     private static Map<String, List<DiaryEntry>> userEntries = new HashMap<>(); // Map of user -> diary entries
@@ -15,7 +16,7 @@ public class DiaryDataStore {
         loadRecycleBin();
     }
 
-    // Method to load all entries from users' files
+    // Load all diary entries for all users from CSV files
     private static void loadAllEntries() {
         File userDirectory = new File(BASE_PATH);
         if (!userDirectory.exists()) {
@@ -31,7 +32,7 @@ public class DiaryDataStore {
         }
     }
 
-    // Load entries for a specific user
+    // Load diary entries for a specific user from their CSV file
     private static List<DiaryEntry> loadEntriesForUser(String username) {
         List<DiaryEntry> loadedEntries = new ArrayList<>();
         File file = new File(BASE_PATH + "/" + username + "_entries.csv");
@@ -39,7 +40,7 @@ public class DiaryDataStore {
             String line;
             while ((line = reader.readLine()) != null) {
                 try {
-                    DiaryEntry entry = DiaryEntry.fromCSV(line);
+                    DiaryEntry entry = DiaryEntry.fromCSV(line);  // Assuming DiaryEntry.fromCSV converts CSV to DiaryEntry
                     loadedEntries.add(entry);
                 } catch (IllegalArgumentException e) {
                     System.err.println("Skipping invalid line: " + line); // Log invalid entries
@@ -51,7 +52,7 @@ public class DiaryDataStore {
         return loadedEntries;
     }
 
-    // Add a new diary entry for a specific user
+    // Add a new diary entry for a specific user and save it to the CSV
     public static void addEntry(String username, DiaryEntry entry) {
         userEntries.computeIfAbsent(username, k -> new ArrayList<>()).add(entry);
         saveEntriesForUser(username);  // Save the updated list of entries for the user
@@ -81,46 +82,13 @@ public class DiaryDataStore {
         }
     }
 
-    // Restore a deleted entry for a specific user
-    public static void restoreEntry(String username, DiaryEntry entry) {
-        DeletedDiaryEntry deletedEntry = recycleBin.stream()
-                .filter(de -> de.getEntry().equals(entry))
-                .findFirst()
-                .orElse(null);
-
-        if (deletedEntry != null) {
-            userEntries.computeIfAbsent(username, k -> new ArrayList<>()).add(deletedEntry.getEntry());
-            recycleBin.remove(deletedEntry);
-            saveEntriesForUser(username);
-            saveRecycleBin();
-        }
-    }
-
-    // Permanently delete an entry from the recycle bin
-    public static void permanentlyDeleteEntry(DiaryEntry entry) {
-        DeletedDiaryEntry deletedEntry = recycleBin.stream()
-                .filter(de -> de.getEntry().equals(entry))
-                .findFirst()
-                .orElse(null);
-
-        if (deletedEntry != null) {
-            recycleBin.remove(deletedEntry);
-            saveRecycleBin();
-        }
-    }
-
-    // Get diary entries for a specific user
-    public static List<DiaryEntry> getEntries(String username) {
-        return new ArrayList<>(userEntries.getOrDefault(username, new ArrayList<>()));
-    }
-
-    // Save entries for a specific user
+    // Save the list of entries for a specific user to their CSV file
     private static void saveEntriesForUser(String username) {
         List<DiaryEntry> entries = userEntries.get(username);
         if (entries != null) {
             try (BufferedWriter writer = new BufferedWriter(new FileWriter(BASE_PATH + "/" + username + "_entries.csv"))) {
                 for (DiaryEntry entry : entries) {
-                    writer.write(entry.toCSV());
+                    writer.write(entry.toCSV());  // Assuming DiaryEntry.toCSV converts DiaryEntry to CSV string
                     writer.newLine();
                 }
             } catch (IOException e) {
@@ -134,7 +102,7 @@ public class DiaryDataStore {
         try (BufferedReader reader = new BufferedReader(new FileReader(RECYCLE_BIN_PATH))) {
             String line;
             while ((line = reader.readLine()) != null) {
-                recycleBin.add(DeletedDiaryEntry.fromCSV(line));
+                recycleBin.add(DeletedDiaryEntry.fromCSV(line));  // Assuming DeletedDiaryEntry.fromCSV converts CSV to DeletedDiaryEntry
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -145,19 +113,23 @@ public class DiaryDataStore {
     private static void saveRecycleBin() {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(RECYCLE_BIN_PATH))) {
             for (DeletedDiaryEntry deletedEntry : recycleBin) {
-                writer.write(deletedEntry.toCSV());
+                writer.write(deletedEntry.toCSV());  // Assuming DeletedDiaryEntry.toCSV converts DeletedDiaryEntry to CSV
                 writer.newLine();
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
-    
+
+    // Get the diary entries for a specific user
+    public static List<DiaryEntry> getEntries(String username) {
+        return new ArrayList<>(userEntries.getOrDefault(username, new ArrayList<>())); 
+    }
+
+    // Get the entries from the recycle bin
     public static List<DiaryEntry> getRecycleBinEntries() {
-        // Map the DeletedDiaryEntry objects back to DiaryEntry objects for easier access
         return recycleBin.stream()
                          .map(DeletedDiaryEntry::getEntry)
                          .collect(Collectors.toList());
     }
-
 }

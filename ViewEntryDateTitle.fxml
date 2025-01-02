@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ListView?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+
+
+<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="396.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="application.ViewEntriesScreenController">
+   <children>
+      <Label layoutX="225.0" layoutY="14.0" prefHeight="36.0" prefWidth="149.0" text="View Entries">
+         <font>
+            <Font name="Times New Roman" size="21.0" />
+         </font>
+      </Label>
+
+      <!-- Search Bar for Title -->
+      <HBox spacing="10.0" layoutX="10.0" layoutY="50.0">
+          <TextField fx:id="searchTextField" promptText="Search by title" prefWidth="300.0" />
+          <Button fx:id="searchButton" text="Search" onAction="#searchByTitle" />
+      </HBox>
+
+      <!-- ListView to display the diary entries -->
+      <ListView fx:id="entriesListView" layoutY="90.0" prefHeight="200.0" prefWidth="580.0" />
+
+      <!-- Sorting Buttons -->
+      <HBox spacing="10.0" layoutX="10.0" layoutY="300.0">
+          <Button fx:id="sortByDateAscButton" text="Sort by Date (Ascending)" onAction="#sortByDateAscending" />
+          <Button fx:id="sortByDateDescButton" text="Sort by Date (Descending)" onAction="#sortByDateDescending" />
+          <Button fx:id="sortByTitleButton" text="Sort by Title" onAction="#sortByTitle" />
+      </HBox>
+
+      <!-- New Entry Section -->
+      <VBox layoutY="260.0" spacing="10.0" layoutX="10.0">
+          <TextField fx:id="titleTextField" promptText="Title" prefWidth="280.0" />
+          <TextField fx:id="contentTextField" promptText="Content" prefWidth="280.0" />
+          <Button fx:id="addEntryButton" text="Add Entry" onAction="#addEntry" prefWidth="280.0" />
+      </VBox>
+
+      <!-- Buttons to Edit, Delete, and Go Back -->
+      <Button fx:id="backButton" layoutX="23.0" layoutY="350.0" mnemonicParsing="false" onAction="#goBack" prefHeight="26.0" prefWidth="62.0" text="Back">
+         <font>
+            <Font name="Times New Roman" size="15.0" />
+         </font>
+      </Button>
+      <Button fx:id="editButton" layoutX="268.0" layoutY="350.0" mnemonicParsing="false" onAction="#editEntry" prefHeight="28.0" prefWidth="62.0" text="Edit">
+         <font>
+            <Font name="Times New Roman" size="15.0" />
+         </font>
+      </Button>
+      <Button fx:id="deleteButton" layoutX="511.0" layoutY="350.0" mnemonicParsing="false" onAction="#deleteEntry" prefHeight="28.0" prefWidth="62.0" text="Delete">
+         <font>
+            <Font name="Times New Roman" size="15.0" />
+         </font>
+      </Button>
+   </children>
+</AnchorPane>

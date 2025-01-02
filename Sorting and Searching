@@ -1,0 +1,91 @@
+import java.util.Collections;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+
+public class real {
+
+    // DiaryEntry class using JavaFX properties for easier binding to the UI
+    public static class DiaryEntry {
+        private String title;
+        private String content;
+        private LocalDate date;
+
+        public DiaryEntry(String title, String content, LocalDate date) {
+            this.title = title;
+            this.content = content;
+            this.date = date;
+        }
+
+        public String getTitle() {
+            return title;
+        }
+
+        public String getContent() {
+            return content;
+        }
+
+        public LocalDate getDate() {
+            return date;
+        }
+
+        @Override
+        public String toString() {
+            return title + " - " + date; // Used for displaying in ListView
+        }
+    }
+
+    private static List<DiaryEntry> entries = new ArrayList<>();
+
+    // Add a new diary entry to the list
+    public static void addEntry(String title, String content, LocalDate date) {
+        entries.add(new DiaryEntry(title, content, date));
+    }
+
+    // Delete an entry by its title
+    public static void deleteEntry(String title) {
+        entries.removeIf(entry -> entry.getTitle().equals(title));
+    }
+
+    // Search for diary entries by title keyword
+    public static List<DiaryEntry> searchByTitle(String keyword) {
+        List<DiaryEntry> result = new ArrayList<>();
+        for (DiaryEntry entry : entries) {
+            if (entry.getTitle().toLowerCase().contains(keyword.toLowerCase())) {
+                result.add(entry);
+            }
+        }
+        return result;
+    }
+
+    // Search for diary entries by date
+    public static List<DiaryEntry> searchByDate(LocalDate date) {
+        List<DiaryEntry> result = new ArrayList<>();
+        for (DiaryEntry entry : entries) {
+            if (entry.getDate().equals(date)) {
+                result.add(entry);
+            }
+        }
+        return result;
+    }
+
+    // Sort entries by date (ascending or descending)
+    public static void sortByDate(boolean ascending) {
+        if (ascending) {
+            entries.sort(Comparator.comparing(DiaryEntry::getDate));
+        } else {
+            entries.sort(Comparator.comparing(DiaryEntry::getDate).reversed());
+        }
+    }
+
+    // Sort entries by title alphabetically
+    public static void sortByTitle() {
+        entries.sort(Comparator.comparing(DiaryEntry::getTitle));
+    }
+
+    // Get all diary entries
+    public static List<DiaryEntry> getAllEntries() {
+        return new ArrayList<>(entries);
+    }
+}

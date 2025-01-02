@@ -2,6 +2,7 @@ package application;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -19,9 +20,6 @@ import javafx.stage.Stage;
 
 public class AddEntryScreenController {
 	
-	private Stage stage;
-	private Scene scene;
-	private Parent root;
 	
 	@FXML
 	private TextField dateField;
@@ -78,11 +76,16 @@ public class AddEntryScreenController {
 			
 			DiaryEntry entry = new DiaryEntry(date, title, content, finalImagePath);
 			
-			if(currentEntry != null) {
-				DiaryDataStore.updateEntry(currentEntry, entry);
-			}else {
-				DiaryDataStore.addEntry(entry);
-			}
+			String username = "currentUser";
+			 
+			if (currentEntry != null) {
+	            DiaryDataStore.updateEntry(username, currentEntry, entry);
+	        } else {
+	            DiaryDataStore.addEntry(username, entry);
+	        }
+			
+			List<DiaryEntry> entries = DiaryDataStore.getEntries(username);
+	        System.out.println("Entries after save: " + entries.size());
 			
 			dateField.clear();
 			titleField.clear();

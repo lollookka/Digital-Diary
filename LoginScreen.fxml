@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Hyperlink?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.PasswordField?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.text.Font?>
+
+<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="application.LoginScreenController">
+   <children>
+      <Label alignment="CENTER" layoutX="230.0" layoutY="14.0" prefHeight="40.0" prefWidth="139.0" text="Login">
+         <font>
+            <Font name="Times New Roman" size="27.0" />
+         </font>
+      </Label>
+      <TextField fx:id="usernameOrEmailTextField" layoutX="36.0" layoutY="77.0" prefHeight="32.0" prefWidth="524.0" promptText=" Enter username or email" />
+      <PasswordField fx:id="passwordTextField" layoutX="36.0" layoutY="123.0" prefHeight="32.0" prefWidth="524.0" promptText="Enter password" />
+      <Button fx:id="loginButton" layoutX="268.0" layoutY="340.0" mnemonicParsing="false" onAction="#loginUser" text="Login">
+         <font>
+            <Font name="Times New Roman" size="16.0" />
+         </font>
+      </Button>
+      <Hyperlink fx:id="registerLink" layoutX="176.0" layoutY="296.0" onAction="#goToRegister" text="Don't have an account? Register here">
+         <font>
+            <Font name="Times New Roman" size="16.0" />
+         </font>
+      </Hyperlink>
+   </children>
+</AnchorPane>

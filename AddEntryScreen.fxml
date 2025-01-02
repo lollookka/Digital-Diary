@@ -10,7 +10,7 @@
 
 <AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="630.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="application.AddEntryScreenController">
    <children>
-      <TextField fx:id="dateField" layoutX="56.0" layoutY="1.0" prefHeight="26.0" prefWidth="544.0" promptText="DD-MM-YY">
+      <TextField fx:id="dateField" layoutX="56.0" layoutY="1.0" prefHeight="26.0" prefWidth="544.0" promptText="YY-MM-DD">
          <font>
             <Font name="Times New Roman" size="15.0" />
          </font>

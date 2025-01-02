@@ -32,10 +32,20 @@ public class DiaryEntry {
 		return String.join(",", escapeCSV(date), escapeCSV(title), escapeCSV(content), escapeCSV(imagePath));
 	}
 	
-	public static DiaryEntry fromCSV(String csvLine) {
-		String[] fields = csvLine.split(",", -1);
-		return new DiaryEntry(unescapeCSV(fields[0]), unescapeCSV(fields[1]), unescapeCSV(fields[2]), unescapeCSV(fields[3]));
+	public static DiaryEntry fromCSV(String csvLine) throws IllegalArgumentException {
+	    String[] fields = csvLine.split(",");
+	    if (fields.length < 4) {
+	        throw new IllegalArgumentException("CSV format is invalid, expected at least 4 fields. Found: " + fields.length);
+	    }
+
+	    String title = fields[0];
+	    String date = fields[1];
+	    String content = fields[2];
+	    String imagePath = fields[3];
+
+	    return new DiaryEntry(title, date, content, imagePath);
 	}
+
 	
 	private static String escapeCSV(String field) {
 		return field.replace(",", "\\,").replace("\n", "\\n");

@@ -32,4 +32,12 @@ public class MainScreenController {
 		stage.show();
 	}
 	
+	public void switchToRecycleBin(ActionEvent event) throws IOException {
+		root = FXMLLoader.load(getClass().getResource("RecycleBinScreen.fxml"));
+		stage = (Stage)((Node)event.getSource()).getScene().getWindow();
+		scene = new Scene(root);
+		stage.setScene(scene);
+		stage.show();
+	}
+	
 }

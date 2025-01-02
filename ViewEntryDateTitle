@@ -1,11 +1,16 @@
 package application;
 
-import javafx.fxml.FXML;
-import javafx.scene.control.ListView;
-import javafx.scene.control.Button;
-import javafx.scene.control.TextField;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.fxml.FXML;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
+import javafx.scene.control.Button;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.ListView;
+import javafx.scene.control.TextField;
+
+import java.time.LocalDate;
 
 public class ViewEntriesScreenController {
 
@@ -45,9 +50,19 @@ public class ViewEntriesScreenController {
     @FXML
     private Button sortByTitleButton;
 
+    @FXML
+    private ComboBox<String> sortComboBox;
+
     // Initialize the ListView with diary entries
     public void initialize() {
         loadEntries();
+
+        // Initialize sorting ComboBox
+        sortComboBox.getItems().addAll(
+            "Sort by Title", 
+            "Sort by Date (Ascending)", 
+            "Sort by Date (Descending)"
+        );
     }
 
     // Load all entries into the ListView
@@ -135,5 +150,39 @@ public class ViewEntriesScreenController {
     private void sortByTitle() {
         real.sortByTitle();
         loadEntries(); // Refresh ListView
+    }
+
+    // Method to sort diary entries based on selected ComboBox option
+    @FXML
+    private void sortEntries() {
+        String selectedSortOption = sortComboBox.getValue();
+        
+        // Sort entries based on the selected option
+        if (selectedSortOption != null) {
+            switch (selectedSortOption) {
+                case "Sort by Title":
+                    real.sortByTitle();
+                    break;
+                case "Sort by Date (Ascending)":
+                    real.sortByDate(true);
+                    break;
+                case "Sort by Date (Descending)":
+                    real.sortByDate(false);
+                    break;
+                default:
+                    break;
+            }
+            // After sorting, update the ListView
+            loadEntries();
+        }
+    }
+
+    // Method to show alert messages
+    private void showAlert(String title, String message) {
+        Alert alert = new Alert(AlertType.WARNING);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        alert.showAndWait();
     }
 }

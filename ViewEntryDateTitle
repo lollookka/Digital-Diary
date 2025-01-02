@@ -1,0 +1,139 @@
+package application;
+
+import javafx.fxml.FXML;
+import javafx.scene.control.ListView;
+import javafx.scene.control.Button;
+import javafx.scene.control.TextField;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+
+public class ViewEntriesScreenController {
+
+    @FXML
+    private ListView<String> entriesListView;
+
+    @FXML
+    private Button backButton;
+
+    @FXML
+    private Button editButton;
+
+    @FXML
+    private Button deleteButton;
+
+    @FXML
+    private Button addEntryButton;
+
+    @FXML
+    private TextField titleTextField;
+
+    @FXML
+    private TextField contentTextField;
+
+    @FXML
+    private TextField searchTextField;
+
+    @FXML
+    private Button searchButton;
+
+    @FXML
+    private Button sortByDateAscButton;
+
+    @FXML
+    private Button sortByDateDescButton;
+
+    @FXML
+    private Button sortByTitleButton;
+
+    // Initialize the ListView with diary entries
+    public void initialize() {
+        loadEntries();
+    }
+
+    // Load all entries into the ListView
+    private void loadEntries() {
+        ObservableList<String> items = FXCollections.observableArrayList();
+        for (real.DiaryEntry entry : real.entries) {
+            items.add(entry.getTitle() + " - " + entry.getDate()); // Display title and date
+        }
+        entriesListView.setItems(items);
+    }
+
+    // Method to add a new diary entry
+    @FXML
+    private void addEntry() {
+        String title = titleTextField.getText();
+        String content = contentTextField.getText();
+        LocalDate date = LocalDate.now(); // You can adjust this to allow custom dates
+
+        if (!title.isEmpty() && !content.isEmpty()) {
+            real.addEntry(title, content, date);
+            titleTextField.clear();
+            contentTextField.clear();
+            loadEntries(); // Refresh ListView
+        }
+    }
+
+    // Method to edit the selected diary entry
+    @FXML
+    private void editEntry() {
+        String selectedEntry = entriesListView.getSelectionModel().getSelectedItem();
+        if (selectedEntry != null) {
+            String title = selectedEntry.split(" - ")[0];
+            // Open an editor or modify the entry as needed
+            System.out.println("Editing entry: " + title);
+        }
+    }
+
+    // Method to delete the selected diary entry
+    @FXML
+    private void deleteEntry() {
+        String selectedEntry = entriesListView.getSelectionModel().getSelectedItem();
+        if (selectedEntry != null) {
+            String title = selectedEntry.split(" - ")[0];
+            real.deleteEntry(title); // Delete from real.entries
+            loadEntries(); // Refresh ListView
+        }
+    }
+
+    // Method to handle back button
+    @FXML
+    private void goBack() {
+        // Implement navigation logic here
+        System.out.println("Back button clicked");
+    }
+
+    // Method to search diary entries by title
+    @FXML
+    private void searchByTitle() {
+        String keyword = searchTextField.getText().trim().toLowerCase();
+        ObservableList<String> items = FXCollections.observableArrayList();
+        for (real.DiaryEntry entry : real.entries) {
+            if (entry.getTitle().toLowerCase().contains(keyword)) {
+                items.add(entry.getTitle() + " - " + entry.getDate());
+            }
+        }
+        entriesListView.setItems(items);
+    }
+
+    // Method to sort diary entries by date (ascending)
+    @FXML
+    private void sortByDateAscending() {
+        real.sortByDate(true);
+        loadEntries(); // Refresh ListView
+    }
+
+    // Method to sort diary entries by date (descending)
+    @FXML
+    private void sortByDateDescending() {
+        real.sortByDate(false);
+        loadEntries(); // Refresh ListView
+    }
+
+    // Method to sort diary entries by title
+    @FXML
+    private void sortByTitle() {
+        real.sortByTitle();
+        loadEntries(); // Refresh ListView
+    }
+}

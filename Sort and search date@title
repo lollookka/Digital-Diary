@@ -25,7 +25,7 @@ public class real {
             return date;
         }
 
-//        @Override
+        @Override
         public String toString() {
             return "Title: " + title + "\nDate: " + date + "\nContent: " + content;
         }
@@ -37,43 +37,47 @@ public class real {
         entries.add(new DiaryEntry(title, content, date));
     }
 
-   public static List<DiaryEntry> searchByTitle(String title) {
-    List<DiaryEntry> result = new ArrayList<>();
-    for (DiaryEntry entry : entries) {
-        if (entry.getTitle().equalsIgnoreCase(title)) {
-            result.add(entry);
+    public static List<DiaryEntry> searchByTitle(String keyword) {
+        List<DiaryEntry> result = new ArrayList<>();
+        for (DiaryEntry entry : entries) {
+            if (entry.getTitle().toLowerCase().contains(keyword.toLowerCase())) {
+                result.add(entry);
+            }
         }
+        return result;
     }
-    return result;
-}
 
-public static List<DiaryEntry> searchByDate(LocalDate date) {
-    List<DiaryEntry> result = new ArrayList<>();
-    for (DiaryEntry entry : entries) {
-        if (entry.getDate().equals(date)) {
-            result.add(entry);
+    public static List<DiaryEntry> searchByDate(LocalDate date) {
+        List<DiaryEntry> result = new ArrayList<>();
+        for (DiaryEntry entry : entries) {
+            if (entry.getDate().equals(date)) {
+                result.add(entry);
+            }
         }
+        return result;
     }
-    return result;
+
+    public static void sortByDate(boolean ascending) {
+    if (ascending) {
+        Collections.sort(entries, new Comparator<DiaryEntry>() {
+            @Override
+            public int compare(DiaryEntry d1, DiaryEntry d2) {
+                return d1.getDate().compareTo(d2.getDate());
+            }
+        });
+    } else {
+        Collections.sort(entries, new Comparator<DiaryEntry>() {
+            @Override
+            public int compare(DiaryEntry d1, DiaryEntry d2) {
+                return d2.getDate().compareTo(d1.getDate());
+            }
+        });
+    }
 }
 
-public static void sortByDate() {
-    Collections.sort(entries, new Comparator<DiaryEntry>() {
-        @Override
-        public int compare(DiaryEntry d1, DiaryEntry d2) {
-            return d1.getDate().compareTo(d2.getDate());
-        }
-    });
-}
-
-public static void sortByTitle() {
-    Collections.sort(entries, new Comparator<DiaryEntry>() {
-        @Override
-        public int compare(DiaryEntry d1, DiaryEntry d2) {
-            return d1.getTitle().compareToIgnoreCase(d2.getTitle());
-        }
-    });
-} 
+    public static void sortByTitle() {
+        Collections.sort(entries, Comparator.comparing(d -> d.getTitle().toLowerCase()));
+    }
 
     public static void viewAllEntries() {
         entries.forEach(System.out::println);
@@ -86,16 +90,17 @@ public static void sortByTitle() {
             System.out.println("\n1. Add Diary Entry");
             System.out.println("2. Search Diary by Title");
             System.out.println("3. Search Diary by Date");
-            System.out.println("4. Sort Diary by Date");
-            System.out.println("5. Sort Diary by Title");
-            System.out.println("6. View All Entries");
-            System.out.println("7. Exit");
+            System.out.println("4. Sort Diary by Date (Ascending)");
+            System.out.println("5. Sort Diary by Date (Descending)");
+            System.out.println("6. Sort Diary by Title");
+            System.out.println("7. View All Entries");
+            System.out.println("8. Exit");
 
             int choice = scanner.nextInt();
             scanner.nextLine(); // Consume newline
 
             switch (choice) {
-                case 1 :
+                case 1:
                     System.out.print("Enter title: ");
                     String title = scanner.nextLine();
                     System.out.print("Enter content: ");
@@ -104,21 +109,23 @@ public static void sortByTitle() {
                     System.out.print("Do you want to use today's date? (yes/no): ");
                     String useToday = scanner.nextLine().trim().toLowerCase();
                     LocalDate date = useToday.equals("yes") ? LocalDate.now() : LocalDate.parse(scanner.nextLine());
-                    
+
                     addEntry(title, content, date);
                     System.out.println("Diary entry added for date: " + date);
-                
-                case 2 :
-                    System.out.print("Enter title to search: ");
-                    String searchTitle = scanner.nextLine();
-                    List<DiaryEntry> titleResults = searchByTitle(searchTitle);
+                    break;
+
+                case 2:
+                    System.out.print("Enter keyword to search in titles: ");
+                    String keyword = scanner.nextLine();
+                    List<DiaryEntry> titleResults = searchByTitle(keyword);
                     if (titleResults.isEmpty()) {
-                        System.out.println("No entries found with that title.");
+                        System.out.println("No entries found with that keyword in titles.");
                     } else {
                         titleResults.forEach(System.out::println);
                     }
-                
-                case 3 :
+                    break;
+
+                case 3:
                     System.out.print("Enter date to search (YYYY-MM-DD): ");
                     LocalDate searchDate = LocalDate.parse(scanner.nextLine());
                     List<DiaryEntry> dateResults = searchByDate(searchDate);
@@ -126,26 +133,35 @@ public static void sortByTitle() {
                         System.out.println("No entries found for that date.");
                     } else {
                         dateResults.forEach(System.out::println);
-                        }
-                
-                case 4 :
-                    sortByDate();
-                    System.out.println("Diary entries sorted by date.");
-                
-                case 5 :
+                    }
+                    break;
+
+                case 4:
+                    sortByDate(true);
+                    System.out.println("Diary entries sorted by date in ascending order.");
+                    break;
+
+                case 5:
+                    sortByDate(false);
+                    System.out.println("Diary entries sorted by date in descending order.");
+                    break;
+
+                case 6:
                     sortByTitle();
                     System.out.println("Diary entries sorted by title.");
-                
-                case 6 :
+                    break;
+
+                case 7:
                     System.out.println("All Diary Entries:");
                     viewAllEntries();
-                
-                case 7 :
+                    break;
+
+                case 8:
                     System.out.println("Goodbye!");
                     scanner.close();
                     return;
-                
-                default :
+
+                default:
                     System.out.println("Invalid choice. Try again.");
             }
         }

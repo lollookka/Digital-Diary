@@ -770,13 +770,14 @@ public class DigitalDiary extends Application {
                     if (entry.trim().equals(entryToDelete.trim())) {
                         // Move the entry to the recycle bin with a timestamp
                         String timestamp = String.valueOf(System.currentTimeMillis());
-                        File recycleBinFile = new File("recycleBin/deleted_" + timestamp + ".csv");
-
+                        File userRecycleBinDir = new File("recycleBin/" + currentUser);
                         // Ensure the recycle bin directory exists
                         File recycleBinDir = new File("recycleBin");
-                        if (!recycleBinDir.exists()) {
-                            recycleBinDir.mkdir();
-                        }
+                        if (!userRecycleBinDir.exists()) {
+                        userRecycleBinDir.mkdirs();
+                    }
+
+                        File recycleBinFile = new File(userRecycleBinDir, "deleted_" + timestamp + ".csv");
 
                         // Write the entry to the recycle bin file
                         try (BufferedWriter recycleWriter = new BufferedWriter(new FileWriter(recycleBinFile))) {
@@ -895,7 +896,7 @@ public class DigitalDiary extends Application {
 
     
     private void permanentlyDeleteEntry(String fileName) {
-        File recycleBinFile = new File("recycleBin/" + fileName);
+        File recycleBinFile = new File("recycleBin/" + currentUser + "/" + fileName);
 
         if (recycleBinFile.exists()) {
             // Check the age of the file and delete if it's older than 30 days
@@ -918,7 +919,7 @@ public class DigitalDiary extends Application {
 
     
     private void cleanUpRecycleBin() {
-        File recycleBinDir = new File("recycleBin");
+        File recycleBinDir = new File("recycleBin/"+ currentUser);
         File[] files = recycleBinDir.listFiles();
 
         if (files != null) {

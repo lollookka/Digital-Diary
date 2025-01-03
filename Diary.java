@@ -104,13 +104,16 @@ public class Diary extends Application {
         Button allEntriesButton = new Button("View All Entries");
         Button recycleBinButton = new Button("Recycle Bin");
 
+        // Add actions for buttons
         newEntryButton.setOnAction(e -> showEntryCreationScreen());
         editEntryButton.setOnAction(e -> showEditEntryScreen());
         searchButton.setOnAction(e -> showSearchScreen());
         motivationalButton.setOnAction(e -> showMotivationalQuote());
         logOutButton.setOnAction(e -> showLoginScreen());  // Log out and show the login screen
         allEntriesButton.setOnAction(e -> viewAll());
-        recycleBinButton.setOnAction(e -> showRecycleBinScreen());
+
+        // Pass the currentUser to showRecycleBinScreen()
+        recycleBinButton.setOnAction(e -> showRecycleBinScreen(currentUser));
 
         layout.setCenter(entryList);
         HBox actions = new HBox(10, newEntryButton, editEntryButton, searchButton, motivationalButton, logOutButton, allEntriesButton, recycleBinButton);
@@ -121,6 +124,8 @@ public class Diary extends Application {
         primaryStage.setTitle("Digital Diary - Welcome " + currentUser);
         primaryStage.setScene(diaryScene);
     }
+
+
     
       private void viewAll() {
     	    // Create a new layout to display all entries
@@ -548,13 +553,20 @@ public class Diary extends Application {
     	        List<String> allEntries = new ArrayList<>();
     	        boolean entryUpdated = false;
 
+    	        // Read the existing entries from the file
     	        try (BufferedReader reader = new BufferedReader(new FileReader(ENTRIES_FILE))) {
     	            allEntries = reader.lines().collect(Collectors.toList());
     	        }
 
+    	        // Write updated entries back to the file
     	        try (BufferedWriter writer = new BufferedWriter(new FileWriter(ENTRIES_FILE))) {
     	            for (String entry : allEntries) {
-    	                if (entry.equals(originalEntry)) {
+    	                // Split the entry to extract individual fields for comparison
+    	                String[] entryParts = entry.split(",");
+    	                
+    	                // Check if the entry matches the one to be edited based on the title, date, or other identifying fields
+    	                if (entryParts.length >= 6 && entryParts[0].equals(currentUser) && entryParts[1].equals(date.toString()) && entryParts[2].equals(title)) {
+    	                    // Replace with the updated entry
     	                    String updatedEntry = String.join(",", currentUser, date.toString(), title, content, mood, imageName);
     	                    writer.write(updatedEntry + "\n");
     	                    entryUpdated = true;
@@ -564,6 +576,7 @@ public class Diary extends Application {
     	            }
     	        }
 
+    	        // Show a message based on whether the entry was successfully updated
     	        if (entryUpdated) {
     	            showAlert("Entry Updated", "The diary entry has been updated successfully.");
     	            showDiaryScreen();
@@ -575,6 +588,7 @@ public class Diary extends Application {
     	        showAlert("Error", "Unable to update entry.");
     	    }
     	}
+
 
 
     	private void showSearchScreen() {
@@ -752,10 +766,10 @@ public class Diary extends Application {
         alert.showAndWait();
     }
     
-    private void ensureRecycleBinExists() {
-        File recycleBinDir = new File("recycleBin");
-        if (!recycleBinDir.exists()) {
-            recycleBinDir.mkdir();  // Create the recycle bin directory if it doesn't exist
+    private void ensureRecycleBinExists(String username) {
+        File userRecycleBinDir = new File("recycleBin/" + username);
+        if (!userRecycleBinDir.exists()) {
+            userRecycleBinDir.mkdir();  // Create the user-specific recycle bin directory
         }
     }
 
@@ -764,6 +778,12 @@ public class Diary extends Application {
             List<String> allEntries = new ArrayList<>();
             boolean entryFound = false;
 
+            // Create a user-specific directory in the recycle bin
+            File userRecycleBinDir = new File("recycleBin/" + currentUser);
+            if (!userRecycleBinDir.exists()) {
+                userRecycleBinDir.mkdir();  // Create user's recycle bin directory if it doesn't exist
+            }
+
             try (BufferedReader reader = new BufferedReader(new FileReader(ENTRIES_FILE))) {
                 allEntries = reader.lines().collect(Collectors.toList());
             }
@@ -771,9 +791,9 @@ public class Diary extends Application {
             try (BufferedWriter writer = new BufferedWriter(new FileWriter(ENTRIES_FILE))) {
                 for (String entry : allEntries) {
                     if (entry.trim().equals(entryToDelete.trim())) {
-                        // Move the entry to the recycle bin
+                        // Move the entry to the user's recycle bin
                         String timestamp = String.valueOf(System.currentTimeMillis());
-                        File recycleBinFile = new File("recycleBin/deleted_" + timestamp + ".csv");
+                        File recycleBinFile = new File(userRecycleBinDir, "deleted_" + timestamp + ".csv");
 
                         try (BufferedWriter recycleWriter = new BufferedWriter(new FileWriter(recycleBinFile))) {
                             recycleWriter.write(entry + "\n");
@@ -787,7 +807,7 @@ public class Diary extends Application {
             }
 
             if (entryFound) {
-                showAlert("Entry Deleted", "The diary entry has been deleted and moved to the recycle bin.");
+                showAlert("Entry Deleted", "The diary entry has been deleted and moved to your recycle bin.");
                 showDiaryScreen();
             } else {
                 showAlert("Entry Not Found", "The entry you tried to delete was not found.");
@@ -798,10 +818,16 @@ public class Diary extends Application {
         }
     }
 
-    private void showRecycleBinScreen() {
-        File recycleBinDir = new File("recycleBin");
-        File[] files = recycleBinDir.listFiles();
 
+
+    private void showRecycleBinScreen(String currentUser) {
+        // Ensure the recycle bin directory exists for the user
+        File userRecycleBinDir = new File("recycleBin/" + currentUser);
+        if (!userRecycleBinDir.exists()) {
+            userRecycleBinDir.mkdir();  // Create the user's recycle bin directory if it doesn't exist
+        }
+
+        File[] files = userRecycleBinDir.listFiles();
         VBox layout = new VBox(10);
         ListView<String> recycleBinListView = new ListView<>();
         Button restoreButton = new Button("Restore Entry");
@@ -850,6 +876,9 @@ public class Diary extends Application {
         primaryStage.show();
     }
 
+
+
+
     private String getFilePreview(File file) {
         try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
             String line = reader.readLine();
@@ -869,7 +898,7 @@ public class Diary extends Application {
             try (BufferedReader reader = new BufferedReader(new FileReader(recycleBinFile))) {
                 String entry = reader.readLine();
 
-                // Add back to the main entries file
+                // Add the entry back to the main entries file
                 try (BufferedWriter writer = new BufferedWriter(new FileWriter(ENTRIES_FILE, true))) {
                     writer.write(entry + "\n");
                 }
@@ -882,29 +911,24 @@ public class Diary extends Application {
                 showAlert("Error", "Unable to restore the entry.");
             }
         } else {
-            showAlert("Error", "The selected entry does not exist.");
+            showAlert("Error", "The selected entry does not exist in the recycle bin.");
         }
     }
+
 
     private void permanentlyDeleteEntry(String fileName) {
         File recycleBinFile = new File("recycleBin/" + fileName);
 
         if (recycleBinFile.exists()) {
-            // Check the age of the file and delete if it's older than 30 days
-            long currentTime = System.currentTimeMillis();
-            long fileTime = Long.parseLong(fileName.split("_")[1].split("\\.")[0]);
-
-            // If the file is older than 30 days, delete permanently
-            if (currentTime - fileTime > 30L * 24 * 60 * 60 * 1000) {
-                recycleBinFile.delete();
-                showAlert("Entry Permanently Deleted", "The entry has been permanently deleted.");
-            } else {
-                showAlert("Entry Not Yet Expired", "This entry has not yet expired. Please try again later.");
-            }
+            // Delete the entry permanently
+            recycleBinFile.delete();
+            showAlert("Entry Permanently Deleted", "The entry has been permanently deleted from the recycle bin.");
+            showDiaryScreen();  // Optionally go back to the diary screen after deletion
         } else {
-            showAlert("Error", "The selected entry does not exist.");
+            showAlert("Error", "The selected entry does not exist in the recycle bin.");
         }
     }
+
 
     private void cleanUpRecycleBin() {
         File recycleBinDir = new File("recycleBin");

@@ -1,0 +1,311 @@
+package application;
+
+import javafx.application.Application;
+import javafx.scene.Scene;
+import javafx.scene.control.*;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.scene.layout.*;
+import javafx.stage.FileChooser;
+import javafx.stage.Stage;
+import java.io.*;
+import java.time.LocalDate;
+import java.util.*;
+import java.util.stream.Collectors;
+
+public class DigitalDiary extends Application {
+
+    private static final String USER_DATA_FILE = "users.csv";
+    private static final String ENTRIES_FILE = "entries.csv";
+    private static final String TRASH_FILE = "trash.csv";
+
+    private Stage primaryStage;
+    private String currentUser;
+
+    public static void main(String[] args) {
+        launch(args);
+    }
+
+    @Override
+    public void start(Stage primaryStage) {
+        this.primaryStage = primaryStage;
+        showLoginScreen();
+    }
+
+    private void showLoginScreen() {
+        GridPane grid = new GridPane();
+
+        Label usernameLabel = new Label("Username/Email:");
+        TextField usernameField = new TextField();
+        Label passwordLabel = new Label("Password:");
+        PasswordField passwordField = new PasswordField();
+
+        Button loginButton = new Button("Login");
+        Button registerButton = new Button("Register");
+
+        loginButton.setOnAction(e -> handleLogin(usernameField.getText(), passwordField.getText()));
+        registerButton.setOnAction(e -> handleRegister(usernameField.getText(), passwordField.getText()));
+
+        grid.add(usernameLabel, 0, 0);
+        grid.add(usernameField, 1, 0);
+        grid.add(passwordLabel, 0, 1);
+        grid.add(passwordField, 1, 1);
+        grid.add(loginButton, 0, 2);
+        grid.add(registerButton, 1, 2);
+
+        Scene scene = new Scene(grid, 300, 200);
+        primaryStage.setTitle("Digital Diary - Login");
+        primaryStage.setScene(scene);
+        primaryStage.show();
+    }
+
+    private void handleLogin(String username, String password) {
+        try (BufferedReader reader = new BufferedReader(new FileReader(USER_DATA_FILE))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                String[] userDetails = line.split(",");
+                if ((userDetails[0].equals(username) || userDetails[1].equals(username)) && userDetails[2].equals(password)) {
+                    currentUser = username;
+                    showDiaryScreen();
+                    return;
+                }
+            }
+            showAlert("Login Failed", "Invalid username or password.");
+        } catch (IOException e) {
+            showAlert("Error", "Unable to read user data.");
+        }
+    }
+
+    private void handleRegister(String username, String password) {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(USER_DATA_FILE, true))) {
+            writer.write(username + "," + username + "@example.com," + password + "\n");
+            showAlert("Registration Successful", "User registered successfully.");
+        } catch (IOException e) {
+            showAlert("Error", "Unable to save user data.");
+        }
+    }
+
+    private void showDiaryScreen() {
+        BorderPane layout = new BorderPane();
+
+        VBox entryList = new VBox();
+        Button newEntryButton = new Button("New Entry");
+        Button editEntryButton = new Button("Edit Entry");
+        Button deleteEntryButton = new Button("Delete Entry");
+        Button viewDeletedButton = new Button("View Deleted Entries");
+        Button viewAllEntriesButton = new Button("View All Entries");
+        Button searchButton = new Button("Search Entries");
+        Button motivationalButton = new Button("Get Motivational Quote");
+        Button logoutButton = new Button("Logout");
+
+        newEntryButton.setOnAction(e -> showEntryCreationScreen());
+        editEntryButton.setOnAction(e -> showEditEntryScreen());
+        deleteEntryButton.setOnAction(e -> showDeleteEntryScreen());
+        viewDeletedButton.setOnAction(e -> showDeletedEntriesScreen());
+        viewAllEntriesButton.setOnAction(e -> showAllEntriesScreen());
+        searchButton.setOnAction(e -> showSearchScreen());
+        motivationalButton.setOnAction(e -> showMotivationalQuote());
+        logoutButton.setOnAction(e -> showLoginScreen());
+
+        layout.setCenter(entryList);
+        HBox actions = new HBox(newEntryButton, editEntryButton, deleteEntryButton, viewDeletedButton, viewAllEntriesButton, searchButton, motivationalButton, logoutButton);
+        layout.setBottom(actions);
+
+        Scene scene = new Scene(layout, 800, 400);
+        primaryStage.setTitle("Digital Diary - Welcome " + currentUser);
+        primaryStage.setScene(scene);
+    }
+
+    private void showEntryCreationScreen() {
+        GridPane grid = new GridPane();
+
+        Label dateLabel = new Label("Date:");
+        DatePicker datePicker = new DatePicker(LocalDate.now());
+        Label titleLabel = new Label("Title:");
+        TextField titleField = new TextField();
+        Label contentLabel = new Label("Content:");
+        TextArea contentArea = new TextArea();
+        Label moodLabel = new Label("Mood:");
+        ComboBox<String> moodComboBox = new ComboBox<>();
+        moodComboBox.getItems().addAll("Happy", "Neutral", "Sad");
+        moodComboBox.getSelectionModel().selectFirst();
+
+        Button uploadImageButton = new Button("Upload Image");
+        FileChooser fileChooser = new FileChooser();
+        Label imageLabel = new Label("No image selected");
+
+        ImageView imageView = new ImageView();
+        imageView.setFitHeight(100);
+        imageView.setFitWidth(100);
+
+        uploadImageButton.setOnAction(e -> {
+            File selectedFile = fileChooser.showOpenDialog(primaryStage);
+            if (selectedFile != null) {
+                imageLabel.setText(selectedFile.getName());
+                Image image = new Image(selectedFile.toURI().toString());
+                imageView.setImage(image);
+            }
+        });
+
+        Button saveButton = new Button("Save");
+        saveButton.setOnAction(e -> handleSaveEntry(datePicker.getValue(), titleField.getText(), contentArea.getText(), moodComboBox.getValue(), imageLabel.getText(), imageView));
+
+        grid.add(dateLabel, 0, 0);
+        grid.add(datePicker, 1, 0);
+        grid.add(titleLabel, 0, 1);
+        grid.add(titleField, 1, 1);
+        grid.add(contentLabel, 0, 2);
+        grid.add(contentArea, 1, 2);
+        grid.add(moodLabel, 0, 3);
+        grid.add(moodComboBox, 1, 3);
+        grid.add(uploadImageButton, 0, 4);
+        grid.add(imageLabel, 1, 4);
+        grid.add(imageView, 1, 5);
+        grid.add(saveButton, 1, 6);
+
+        Scene scene = new Scene(grid, 400, 400);
+        primaryStage.setTitle("New Diary Entry");
+        primaryStage.setScene(scene);
+    }
+
+    private void handleSaveEntry(LocalDate date, String title, String content, String mood, String imageName, ImageView imageView) {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(ENTRIES_FILE, true))) {
+            writer.write(currentUser + "," + date + "," + title + "," + content + "," + mood + "," + imageName + "\n");
+            showAlert("Entry Saved", "Diary entry saved successfully.");
+            showDiaryScreen();
+        } catch (IOException e) {
+            showAlert("Error", "Unable to save diary entry.");
+        }
+    }
+
+    private void showEditEntryScreen() {
+        VBox layout = new VBox();
+
+        Label selectEntryLabel = new Label("Select an entry to edit:");
+        ComboBox<String> entryComboBox = new ComboBox<>();
+
+        try (BufferedReader reader = new BufferedReader(new FileReader(ENTRIES_FILE))) {
+            reader.lines()
+                .filter(line -> line.contains(currentUser))
+                .forEach(entryComboBox.getItems()::add);
+        } catch (IOException e) {
+            showAlert("Error", "Unable to load entries for editing.");
+        }
+
+        Button editButton = new Button("Edit Selected Entry");
+        editButton.setOnAction(e -> {
+            String selectedEntry = entryComboBox.getValue();
+            if (selectedEntry != null) {
+                showEditDetailsScreen(selectedEntry);
+            } else {
+                showAlert("No Entry Selected", "Please select an entry to edit.");
+            }
+        });
+
+        layout.getChildren().addAll(selectEntryLabel, entryComboBox, editButton);
+
+        Scene scene = new Scene(layout, 400, 300);
+        primaryStage.setTitle("Edit Diary Entry");
+        primaryStage.setScene(scene);
+    }
+
+    private void showEditDetailsScreen(String entry) {
+        GridPane grid = new GridPane();
+        String[] entryDetails = entry.split(",");
+
+        Label dateLabel = new Label("Date:");
+        DatePicker datePicker = new DatePicker(LocalDate.parse(entryDetails[1]));
+        Label titleLabel = new Label("Title:");
+        TextField titleField = new TextField(entryDetails[2]);
+        Label contentLabel = new Label("Content:");
+        TextArea contentArea = new TextArea(entryDetails[3]);
+        Label moodLabel = new Label("Mood:");
+        ComboBox<String> moodComboBox = new ComboBox<>();
+        moodComboBox.getItems().addAll("Happy", "Neutral", "Sad");
+        moodComboBox.setValue(entryDetails[4]);
+
+        Label imageLabel = new Label("Image:");
+        ImageView imageView = new ImageView();
+        imageView.setFitHeight(100);
+        imageView.setFitWidth(100);
+        if (entryDetails.length > 5 && !entryDetails[5].isEmpty()) {
+            File imageFile = new File(entryDetails[5]);
+            if (imageFile.exists()) {
+                Image image = new Image(imageFile.toURI().toString());
+                imageView.setImage(image);
+            }
+        }
+
+        Button saveButton = new Button("Save Changes");
+        saveButton.setOnAction(e -> handleEditEntry(entry, datePicker.getValue(), titleField.getText(), contentArea.getText(), moodComboBox.getValue()));
+
+        grid.add(dateLabel, 0, 0);
+        grid.add(datePicker, 1, 0);
+        grid.add(titleLabel, 0, 1);
+        grid.add(titleField, 1, 1);
+        grid.add(contentLabel, 0, 2);
+        grid.add(contentArea, 1, 2);
+        grid.add(moodLabel, 0, 3);
+        grid.add(moodComboBox, 1, 3);
+        grid.add(imageLabel, 0, 4);
+        grid.add(imageView, 1, 4);
+        grid.add(saveButton, 1, 5);
+
+        Scene scene = new Scene(grid, 400, 400);
+        primaryStage.setTitle("Edit Entry Details");
+        primaryStage.setScene(scene);
+    }
+
+    private void handleEditEntry(String originalEntry, LocalDate date, String title, String content, String mood) {
+        try {
+            List<String> allEntries = new ArrayList<>();
+
+            try (BufferedReader reader = new BufferedReader(new FileReader(ENTRIES_FILE))) {
+                allEntries = reader.lines().collect(Collectors.toList());
+            }
+
+            try (BufferedWriter writer = new BufferedWriter(new FileWriter(ENTRIES_FILE))) {
+                for (String entry : allEntries) {
+                    if (entry.equals(originalEntry)) {
+                        writer.write(currentUser + "," + date + "," + title + "," + content + "," + mood + "\n");
+                    } else {
+                        writer.write(entry + "\n");
+                    }
+                }
+            }
+
+            showAlert("Entry Updated", "The diary entry has been updated successfully.");
+            showDiaryScreen();
+        } catch (IOException e) {
+            showAlert("Error", "Unable to update entry.");
+        }
+    }
+
+    private void showMotivationalQuote() {
+        Map<String, List<String>> quotes = new HashMap<>();
+        quotes.put("Happy", Arrays.asList("Keep shining, you're amazing!", "Spread your joy to the world!"));
+        quotes.put("Neutral", Arrays.asList("Every day is a chance to grow.", "Stay steady and keep moving forward."));
+        quotes.put("Sad", Arrays.asList("It's okay to not be okay.", "Keep going, brighter days are ahead."));
+
+        String mood = "Neutral"; // Default if no mood is selected.
+
+        try (BufferedReader reader = new BufferedReader(new FileReader(ENTRIES_FILE))) {
+            Optional<String> lastEntry = reader.lines()
+                .filter(line -> line.contains(currentUser))
+                .reduce((first, second) -> second); // Get the last entry for the current user
+
+            if (lastEntry.isPresent()) {
+                String[] entryDetails = lastEntry.get().split(",");
+                mood = entryDetails[4]; // Extract mood from the last entry
+            }
+        } catch (IOException e) {
+            showAlert("Error", "Unable to determine mood from last entry.");
+        }
+
+        List<String> moodQuotes = quotes.getOrDefault(mood, quotes.get("Neutral"));
+        Random random = new Random();
+        String quote = moodQuotes.get(random.nextInt(moodQuotes.size()));
+
+        showAlert("Motivational Quote", quote);
+    }
+

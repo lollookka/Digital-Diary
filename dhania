@@ -398,5 +398,36 @@ public class DigitalDiary extends Application {
 
         showAlert("Motivational Quote", randomQuote);
     }
+     
+     private void showEditEntryScreen() {
+        VBox layout = new VBox();
+
+        Label selectEntryLabel = new Label("Select an entry to edit:");
+        ComboBox<String> entryComboBox = new ComboBox<>();
+
+        try (BufferedReader reader = new BufferedReader(new FileReader(ENTRIES_FILE))) {
+            reader.lines()
+                .filter(line -> line.contains(currentUser))
+                .forEach(entryComboBox.getItems()::add);
+        } catch (IOException e) {
+            showAlert("Error", "Unable to load entries for editing.");
+        }
+
+        Button editButton = new Button("Edit Selected Entry");
+        editButton.setOnAction(e -> {
+            String selectedEntry = entryComboBox.getValue();
+            if (selectedEntry != null) {
+                showEditDetailsScreen(selectedEntry);
+            } else {
+                showAlert("No Entry Selected", "Please select an entry to edit.");
+            }
+        });
+
+        layout.getChildren().addAll(selectEntryLabel, entryComboBox, editButton);
+
+        Scene scene = new Scene(layout, 400, 300);
+        primaryStage.setTitle("Edit Diary Entry");
+        primaryStage.setScene(scene);
+    }
 
 }

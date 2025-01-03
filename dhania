@@ -430,4 +430,29 @@ public class DigitalDiary extends Application {
         primaryStage.setScene(scene);
     }
 
+      private void showSearchScreen() {
+        GridPane grid = new GridPane();
+
+        Label searchLabel = new Label("Keyword:");
+        TextField searchField = new TextField();
+        Button searchButton = new Button("Search");
+        Button backButton = new Button("Back to Home");
+        TextArea resultsArea = new TextArea();
+        resultsArea.setEditable(false);
+
+        searchButton.setOnAction(e -> handleSearchEntries(searchField.getText(), resultsArea));
+        backButton.setOnAction(e -> showDiaryScreen());
+
+        grid.add(searchLabel, 0, 0);
+        grid.add(searchField, 1, 0);
+        grid.add(searchButton, 2, 0);
+        grid.add(backButton, 3, 0);
+        grid.add(resultsArea, 0, 1, 4, 1);
+
+        Scene scene = new Scene(grid, 500, 300);
+        primaryStage.setTitle("Search Entries");
+        primaryStage.setScene(scene);
+    }
+
+
 }

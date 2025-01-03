@@ -371,4 +371,32 @@ public class DigitalDiary extends Application {
         alert.setContentText(message);
         alert.showAndWait();
     }
+
+    private void showMotivationalQuote() {
+        Map<String, List<String>> quotes = new HashMap<>();
+        quotes.put("Happy", Arrays.asList("Keep shining, you're amazing!", "Spread your joy to the world!"));
+        quotes.put("Neutral", Arrays.asList("Every day is a chance to grow.", "Stay steady and keep moving forward."));
+        quotes.put("Sad", Arrays.asList("It's okay to not be okay.", "Keep going, brighter days are ahead."));
+
+        String mood = "Neutral"; // Default if no mood is selected.
+
+        try (BufferedReader reader = new BufferedReader(new FileReader(ENTRIES_FILE))) {
+            Optional<String> lastEntry = reader.lines()
+                .filter(line -> line.contains(currentUser))
+                .reduce((first, second) -> second);
+
+            if (lastEntry.isPresent()) {
+                String[] details = lastEntry.get().split(",");
+                mood = details[4];
+            }
+        } catch (IOException e) {
+            showAlert("Error", "Unable to retrieve last mood.");
+        }
+
+        List<String> moodQuotes = quotes.getOrDefault(mood, quotes.get("Neutral"));
+        String randomQuote = moodQuotes.get(new Random().nextInt(moodQuotes.size()));
+
+        showAlert("Motivational Quote", randomQuote);
+    }
+
 }

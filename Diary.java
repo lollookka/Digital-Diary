@@ -478,26 +478,74 @@ public class Diary extends Application {
     	}
 
     	private void showEditDetailsScreen(String entry) {
+    	    // Split the entry into its components
     	    String[] entryDetails = entry.split(",");
-    	    
-    	    // Use a helper method to generate the form
-    	    GridPane grid = createEntryForm(entryDetails);
+    	    if (entryDetails.length < 6) {
+    	        showAlert("Error", "Invalid entry format.");
+    	        return;
+    	    }
 
+    	    // Initialize UI components
+    	    GridPane grid = new GridPane();
+    	    grid.setHgap(10);
+    	    grid.setVgap(10);
+    	    grid.setPadding(new Insets(10, 10, 10, 10));
+
+    	    // Date Picker for Date
+    	    Label dateLabel = new Label("Date:");
+    	    DatePicker datePicker = new DatePicker(LocalDate.parse(entryDetails[1]));
+    	    grid.add(dateLabel, 0, 0);
+    	    grid.add(datePicker, 1, 0);
+
+    	    // Text Field for Title
+    	    Label titleLabel = new Label("Title:");
+    	    TextField titleField = new TextField(entryDetails[2]);
+    	    grid.add(titleLabel, 0, 1);
+    	    grid.add(titleField, 1, 1);
+
+    	    // Text Area for Content
+    	    Label contentLabel = new Label("Content:");
+    	    TextArea contentArea = new TextArea(entryDetails[3]);
+    	    grid.add(contentLabel, 0, 2);
+    	    grid.add(contentArea, 1, 2);
+
+    	    // Combo Box for Mood
+    	    Label moodLabel = new Label("Mood:");
+    	    ComboBox<String> moodComboBox = new ComboBox<>();
+    	    moodComboBox.getItems().addAll("Happy", "Sad", "Neutral", "Excited", "Angry");
+    	    moodComboBox.setValue(entryDetails[4]); // Set the current mood
+    	    grid.add(moodLabel, 0, 3);
+    	    grid.add(moodComboBox, 1, 3);
+
+    	    // Label for Image (or other associated data)
+    	    Label imageLabel = new Label("Image:");
+    	    TextField imageField = new TextField(entryDetails[5]);
+    	    grid.add(imageLabel, 0, 4);
+    	    grid.add(imageField, 1, 4);
+
+    	    // Save Button
     	    Button saveButton = new Button("Save Changes");
-    	    saveButton.setOnAction(e -> handleEditEntry(entry, 
-    	        LocalDate.parse(entryDetails[1]), 
-    	        entryDetails[2], 
-    	        entryDetails[3], 
-    	        entryDetails[4], 
-    	        entryDetails[5]
+    	    saveButton.setOnAction(e -> handleEditEntry(
+    	        entry,  // Pass the full original entry string
+    	        datePicker.getValue(), 
+    	        titleField.getText(), 
+    	        contentArea.getText(), 
+    	        moodComboBox.getValue(), 
+    	        imageField.getText() // Assuming this stores image info
     	    ));
-
     	    grid.add(saveButton, 1, 6);
 
+    	    // Back Button
+    	    Button backButton = new Button("Back");
+    	    backButton.setOnAction(e -> showEditEntryScreen()); // Navigate back
+    	    grid.add(backButton, 0, 6);
+
+    	    // Display the scene
     	    Scene scene = new Scene(grid, 400, 400);
     	    primaryStage.setTitle("Edit Entry Details");
     	    primaryStage.setScene(scene);
     	}
+
 
     	private GridPane createEntryForm(String[] entryDetails) {
     	    GridPane grid = new GridPane();
@@ -561,11 +609,7 @@ public class Diary extends Application {
     	        // Write updated entries back to the file
     	        try (BufferedWriter writer = new BufferedWriter(new FileWriter(ENTRIES_FILE))) {
     	            for (String entry : allEntries) {
-    	                // Split the entry to extract individual fields for comparison
-    	                String[] entryParts = entry.split(",");
-    	                
-    	                // Check if the entry matches the one to be edited based on the title, date, or other identifying fields
-    	                if (entryParts.length >= 6 && entryParts[0].equals(currentUser) && entryParts[1].equals(date.toString()) && entryParts[2].equals(title)) {
+    	                if (entry.equals(originalEntry)) {
     	                    // Replace with the updated entry
     	                    String updatedEntry = String.join(",", currentUser, date.toString(), title, content, mood, imageName);
     	                    writer.write(updatedEntry + "\n");

@@ -1,0 +1,274 @@
+package application;
+
+import javafx.application.Application;
+import javafx.scene.Scene;
+import javafx.scene.control.*;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.scene.layout.*;
+import javafx.stage.FileChooser;
+import javafx.stage.Stage;
+import java.io.*;
+import java.time.LocalDate;
+import java.util.*;
+import java.util.stream.Collectors;
+
+public class DigitalDiary extends Application {
+
+    private static final String USER_DATA_FILE = "users.csv";
+    private static final String ENTRIES_FILE = "entries.csv";
+    private static final String DELETED_ENTRIES_FILE = "deleted_entries.csv";
+
+    private Stage primaryStage;
+    private String currentUser;
+
+    public static void main(String[] args) {
+        launch(args);
+    }
+
+    @Override
+    public void start(Stage primaryStage) {
+        this.primaryStage = primaryStage;
+        showLoginScreen();
+    }
+
+    private void showLoginScreen() {
+        GridPane grid = new GridPane();
+
+        Label usernameLabel = new Label("Username/Email:");
+        TextField usernameField = new TextField();
+        Label passwordLabel = new Label("Password:");
+        PasswordField passwordField = new PasswordField();
+
+        Button loginButton = new Button("Login");
+        Button registerButton = new Button("Register");
+
+        loginButton.setOnAction(e -> handleLogin(usernameField.getText(), passwordField.getText()));
+        registerButton.setOnAction(e -> handleRegister(usernameField.getText(), passwordField.getText()));
+
+        grid.add(usernameLabel, 0, 0);
+        grid.add(usernameField, 1, 0);
+        grid.add(passwordLabel, 0, 1);
+        grid.add(passwordField, 1, 1);
+        grid.add(loginButton, 0, 2);
+        grid.add(registerButton, 1, 2);
+
+        Scene scene = new Scene(grid, 300, 200);
+        primaryStage.setTitle("Digital Diary - Login");
+        primaryStage.setScene(scene);
+        primaryStage.show();
+    }
+
+    private void handleLogin(String username, String password) {
+        try (BufferedReader reader = new BufferedReader(new FileReader(USER_DATA_FILE))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                String[] userDetails = line.split(",");
+                if ((userDetails[0].equals(username) || userDetails[1].equals(username)) && userDetails[2].equals(password)) {
+                    currentUser = username;
+                    showDiaryScreen();
+                    return;
+                }
+            }
+            showAlert("Login Failed", "Invalid username or password.");
+        } catch (IOException e) {
+            showAlert("Error", "Unable to read user data.");
+        }
+    }
+
+    private void handleRegister(String username, String password) {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(USER_DATA_FILE, true))) {
+            writer.write(username + "," + username + "@example.com," + password + "\n");
+            showAlert("Registration Successful", "User registered successfully.");
+        } catch (IOException e) {
+            showAlert("Error", "Unable to save user data.");
+        }
+    }
+
+    private void showDiaryScreen() {
+        BorderPane layout = new BorderPane();
+
+        VBox entryList = new VBox();
+        Button newEntryButton = new Button("New Entry");
+        Button editEntryButton = new Button("Edit Entry");
+        Button viewAllButton = new Button("View All Entries");
+        Button trashBinButton = new Button("Trash Bin");
+        Button searchButton = new Button("Search Entries");
+        Button motivationalButton = new Button("Get Motivational Quote");
+        Button logoutButton = new Button("Logout");
+
+        newEntryButton.setOnAction(e -> showEntryCreationScreen());
+        editEntryButton.setOnAction(e -> showEditEntryScreen());
+        viewAllButton.setOnAction(e -> showAllEntriesScreen());
+        trashBinButton.setOnAction(e -> showTrashBinScreen());
+        searchButton.setOnAction(e -> showSearchScreen());
+        motivationalButton.setOnAction(e -> showMotivationalQuote());
+        logoutButton.setOnAction(e -> showLoginScreen());
+
+        layout.setCenter(entryList);
+        HBox actions = new HBox(newEntryButton, editEntryButton, viewAllButton, trashBinButton, searchButton, motivationalButton, logoutButton);
+        layout.setBottom(actions);
+
+        Scene scene = new Scene(layout, 600, 400);
+        primaryStage.setTitle("Digital Diary - Welcome " + currentUser);
+        primaryStage.setScene(scene);
+    }
+
+    private void showAllEntriesScreen() {
+        VBox layout = new VBox();
+        ListView<String> entryListView = new ListView<>();
+
+        try (BufferedReader reader = new BufferedReader(new FileReader(ENTRIES_FILE))) {
+            List<String> entries = reader.lines()
+                    .filter(line -> line.contains(currentUser))
+                    .sorted(Comparator.comparing(line -> LocalDate.parse(line.split(",")[1])))
+                    .collect(Collectors.toList());
+            entryListView.getItems().addAll(entries);
+        } catch (IOException e) {
+            showAlert("Error", "Unable to load entries.");
+        }
+
+        entryListView.setOnMouseClicked(e -> {
+            String selectedEntry = entryListView.getSelectionModel().getSelectedItem();
+            if (selectedEntry != null) {
+                showEntryDetailsScreen(selectedEntry);
+            }
+        });
+
+        Button backButton = new Button("Back to Home");
+        backButton.setOnAction(e -> showDiaryScreen());
+
+        layout.getChildren().addAll(entryListView, backButton);
+
+        Scene scene = new Scene(layout, 500, 300);
+        primaryStage.setTitle("View All Entries");
+        primaryStage.setScene(scene);
+    }
+
+    private void showEntryDetailsScreen(String entry) {
+        GridPane grid = new GridPane();
+        String[] details = entry.split(",");
+
+        Label dateLabel = new Label("Date: " + details[1]);
+        Label titleLabel = new Label("Title: " + details[2]);
+        Label contentLabel = new Label("Content: " + details[3]);
+        Label moodLabel = new Label("Mood: " + details[4]);
+        Label imageLabel = new Label("Image: " + details[5]);
+
+        ImageView imageView = new ImageView();
+        File imageFile = new File(details[5]);
+        if (imageFile.exists()) {
+            imageView.setImage(new Image(imageFile.toURI().toString()));
+        }
+
+        grid.add(dateLabel, 0, 0);
+        grid.add(titleLabel, 0, 1);
+        grid.add(contentLabel, 0, 2);
+        grid.add(moodLabel, 0, 3);
+        grid.add(imageLabel, 0, 4);
+        grid.add(imageView, 0, 5);
+
+        Button backButton = new Button("Back");
+        backButton.setOnAction(e -> showDiaryScreen());
+
+        grid.add(backButton, 0, 6);
+
+        Scene scene = new Scene(grid, 500, 400);
+        primaryStage.setTitle("Entry Details");
+        primaryStage.setScene(scene);
+    }
+
+    private void showTrashBinScreen() {
+        VBox layout = new VBox();
+        ListView<String> trashListView = new ListView<>();
+
+        try (BufferedReader reader = new BufferedReader(new FileReader(DELETED_ENTRIES_FILE))) {
+            List<String> deletedEntries = reader.lines()
+                    .filter(line -> line.contains(currentUser))
+                    .collect(Collectors.toList());
+            trashListView.getItems().addAll(deletedEntries);
+        } catch (IOException e) {
+            showAlert("Error", "Unable to load trash bin entries.");
+        }
+
+        Button restoreButton = new Button("Restore Entry");
+        restoreButton.setOnAction(e -> {
+            String selectedEntry = trashListView.getSelectionModel().getSelectedItem();
+            if (selectedEntry != null) {
+                handleRestoreEntry(selectedEntry);
+                trashListView.getItems().remove(selectedEntry);
+            }
+        });
+
+        Button backButton = new Button("Back to Home");
+        backButton.setOnAction(e -> showDiaryScreen());
+
+        layout.getChildren().addAll(trashListView, restoreButton, backButton);
+
+        Scene scene = new Scene(layout, 500, 300);
+        primaryStage.setTitle("Trash Bin");
+        primaryStage.setScene(scene);
+    }
+
+    private void handleRestoreEntry(String entry) {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(ENTRIES_FILE, true))) {
+            writer.write(entry + "\n");
+        } catch (IOException e) {
+            showAlert("Error", "Unable to restore entry.");
+        }
+
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(DELETED_ENTRIES_FILE))) {
+            List<String> deletedEntries;
+            try (BufferedReader reader = new BufferedReader(new FileReader(DELETED_ENTRIES_FILE))) {
+                deletedEntries = reader.lines().collect(Collectors.toList());
+            }
+            for (String line : deletedEntries) {
+                if (!line.equals(entry)) {
+                    writer.write(line + "\n");
+                }
+            }
+        } catch (IOException e) {
+            showAlert("Error", "Unable to update trash bin.");
+        }
+    }
+
+    private void showSearchScreen() {
+        GridPane grid = new GridPane();
+
+        Label searchLabel = new Label("Keyword:");
+        TextField searchField = new TextField();
+        Button searchButton = new Button("Search");
+        TextArea resultsArea = new TextArea();
+        resultsArea.setEditable(false);
+
+        searchButton.setOnAction(e -> handleSearchEntries(searchField.getText(), resultsArea));
+
+        grid.add(searchLabel, 0, 0);
+        grid.add(searchField, 1, 0);
+        grid.add(searchButton, 2, 0);
+        grid.add(resultsArea, 0, 1, 3, 1);
+
+        Scene scene = new Scene(grid, 500, 300);
+        primaryStage.setTitle("Search Entries");
+        primaryStage.setScene(scene);
+    }
+
+    private void handleSearchEntries(String keyword, TextArea resultsArea) {
+        try (BufferedReader reader = new BufferedReader(new FileReader(ENTRIES_FILE))) {
+            List<String> results = reader.lines()
+                .filter(line -> line.contains(currentUser) && line.toLowerCase().contains(keyword.toLowerCase()))
+                .collect(Collectors.toList());
+
+            resultsArea.setText(String.join("\n", results));
+        } catch (IOException e) {
+            showAlert("Error", "Unable to search entries.");
+        }
+    }
+
+    private void showAlert(String title, String message) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle(title);
+        alert.setContentText(message);
+        alert.showAndWait();
+    }
+} 

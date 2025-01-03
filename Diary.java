@@ -31,6 +31,7 @@ public class Diary extends Application {
 
     @Override
     public void start(Stage primaryStage) {
+    	cleanUpRecycleBin();
         this.primaryStage = primaryStage;
         showLoginScreen();
     }
@@ -89,27 +90,37 @@ public class Diary extends Application {
     }
 
     private void showDiaryScreen() {
-        BorderPane layout = new BorderPane();
+        mainLayout = new VBox();  // Initialize the VBox
 
         VBox entryList = new VBox();
         Button newEntryButton = new Button("New Entry");
         Button editEntryButton = new Button("Edit Entry");
         Button searchButton = new Button("Search Entries");
         Button motivationalButton = new Button("Get Motivational Quote");
+        Button recycleBinButton = new Button("Recycle Bin");
 
+        // Set actions for each button
         newEntryButton.setOnAction(e -> showEntryCreationScreen());
         editEntryButton.setOnAction(e -> showEditEntryScreen());
         searchButton.setOnAction(e -> showSearchScreen());
         motivationalButton.setOnAction(e -> showMotivationalQuote());
 
-        layout.setCenter(entryList);
-        HBox actions = new HBox(newEntryButton, editEntryButton, searchButton, motivationalButton);
-        layout.setBottom(actions);
+        // Action for the Recycle Bin button
+        recycleBinButton.setOnAction(e -> showRecycleBinScreen()); // Navigate to Recycle Bin screen
 
-        Scene scene = new Scene(layout, 600, 400);
+        // Add buttons to the layout
+        mainLayout.getChildren().add(entryList);
+
+        // Add the buttons to a horizontal box (HBox)
+        HBox actions = new HBox(10, newEntryButton, editEntryButton, searchButton, motivationalButton, recycleBinButton);
+        mainLayout.getChildren().add(actions); // Set the actions at the bottom of the screen
+
+        // Set the scene
+        Scene scene = new Scene(mainLayout, 600, 400);
         primaryStage.setTitle("Digital Diary - Welcome " + currentUser);
         primaryStage.setScene(scene);
     }
+
 
     private void showEntryCreationScreen() {
         GridPane grid = new GridPane();
@@ -164,6 +175,11 @@ public class Diary extends Application {
         Button saveButton = new Button("Save");
         saveButton.setOnAction(e -> handleSaveEntry(datePicker.getValue(), titleField.getText(), contentArea.getText(), moodComboBox.getValue(), imageLabel.getText(), imageView));
 
+        // Add back button
+        Button backButton = new Button("Back");
+        backButton.setOnAction(e -> showDiaryScreen());  // Navigate to front page or previous screen
+
+        // Add controls to grid
         grid.add(dateLabel, 0, 0);
         grid.add(datePicker, 1, 0);
         grid.add(titleLabel, 0, 1);
@@ -176,6 +192,7 @@ public class Diary extends Application {
         grid.add(imageLabel, 1, 4);
         grid.add(imageView, 1, 5);
         grid.add(saveButton, 1, 6);
+        grid.add(backButton, 0, 7);  // Add back button below the save button
 
         Scene scene = new Scene(grid, 400, 400);
         primaryStage.setTitle("New Diary Entry");
@@ -224,12 +241,28 @@ public class Diary extends Application {
             }
         });
 
-        layout.getChildren().addAll(selectEntryLabel, entryComboBox, editButton);
+        // Add the Delete Button
+        Button deleteButton = new Button("Delete Selected Entry");
+        deleteButton.setOnAction(e -> {
+            String selectedEntry = entryComboBox.getValue();
+            if (selectedEntry != null) {
+                handleDeleteEntry(selectedEntry);  // Call delete handler
+            } else {
+                showAlert("No Entry Selected", "Please select an entry to delete.");
+            }
+        });
+
+        // Add the Back Button to go back to the diary screen
+        Button backButton = new Button("Back to Diary");
+        backButton.setOnAction(e -> showDiaryScreen()); // Navigate back to the diary screen
+
+        layout.getChildren().addAll(selectEntryLabel, entryComboBox, editButton, deleteButton, backButton);
 
         Scene scene = new Scene(layout, 400, 300);
         primaryStage.setTitle("Edit Diary Entry");
         primaryStage.setScene(scene);
     }
+
 
     private void showEditDetailsScreen(String entry) {
         GridPane grid = new GridPane();
@@ -320,12 +353,11 @@ public class Diary extends Application {
 
 
     private void showSearchScreen() {
-        // Clear previous content from mainLayout if it already exists
-        if (mainLayout != null) {
-            mainLayout.getChildren().clear();
-        }
+        // Create a new VBox for the search screen
+        VBox searchLayout = new VBox();
 
-        // Create a new GridPane for the search layout
+        // Clear previous content if necessary (but we're using a new VBox here)
+        // Add a new GridPane for the search layout
         GridPane grid = new GridPane();
         grid.setHgap(10);
         grid.setVgap(10);
@@ -340,9 +372,10 @@ public class Diary extends Application {
         TextArea resultsArea = new TextArea();
         resultsArea.setEditable(false);
 
+        // Handle search, clear and back actions
         searchButton.setOnAction(e -> handleSearchEntries(searchField.getText(), resultsArea));
         clearButton.setOnAction(e -> resultsArea.clear());
-        backButton.setOnAction(e -> showDiaryScreen());
+        backButton.setOnAction(e -> showDiaryScreen()); // Navigate back to the Diary screen
 
         HBox controls = new HBox(10, searchButton, clearButton, backButton);
 
@@ -352,23 +385,19 @@ public class Diary extends Application {
         grid.add(controls, 2, 0, 2, 1);
         grid.add(resultsArea, 0, 1, 4, 1);
 
-        // Add the grid to the main layout (VBox)
-        if (mainLayout == null) {
-            mainLayout = new VBox();
-        }
-        mainLayout.setSpacing(10);
-        mainLayout.getChildren().add(grid);
+        // Create a "Go Back" button to go back after search results
+        Button goBackButton = new Button("Go Back");
+        goBackButton.setOnAction(e -> showDiaryScreen()); // Action to go back to the Diary screen
 
-        // Create a new scene using mainLayout as the root
-        Scene scene = new Scene(mainLayout, 600, 400);
-        
-        // Set the scene for the primary stage
+        // Add the Go Back button below the results
+        VBox searchResultsLayout = new VBox(10, grid, goBackButton);
+        searchLayout.getChildren().add(searchResultsLayout);
+
+        // Create a new scene and set it to the primaryStage
+        Scene scene = new Scene(searchLayout, 600, 400);  // Using searchLayout instead of mainLayout
         primaryStage.setTitle("Search Entries");
         primaryStage.setScene(scene);
     }
-
-
- 
 
     private void handleSearchEntries(String keyword, TextArea resultsArea) {
         if (keyword == null || keyword.trim().isEmpty()) {
@@ -399,14 +428,13 @@ public class Diary extends Application {
                     String title = details[2];
                     String content = details[3];
                     String mood = details[4];
-                    String imagePath = details.length > 5 ? details[5] : "no-image";
+                    String imagePath = details.length > 5 ? details[5] : "no-image"; // Get the image path
 
                     // Append text-based entry details to the TextArea
                     resultsArea.appendText("Date: " + date + "\n");
                     resultsArea.appendText("Title: " + title + "\n");
                     resultsArea.appendText("Mood: " + mood + "\n");
                     resultsArea.appendText("Content: " + content + "\n");
-                    resultsArea.appendText("Image: " + (imagePath.equals("no-image") ? "No image" : imagePath) + "\n\n");
 
                     // Create a VBox for the image and TextArea content
                     VBox entryBox = new VBox();
@@ -416,31 +444,34 @@ public class Diary extends Application {
                     entryTextArea.setText("Date: " + date + "\n" +
                                           "Title: " + title + "\n" +
                                           "Mood: " + mood + "\n" +
-                                          "Content: " + content + "\n" +
-                                          "Image: " + (imagePath.equals("no-image") ? "No image" : imagePath));
+                                          "Content: " + content + "\n");
                     entryTextArea.setEditable(false);  // Make it non-editable
                     entryTextArea.setWrapText(true);
                     entryBox.getChildren().add(entryTextArea);
 
-                    // Add the image if available
+                    // Image handling - Add the image if available
                     if (!imagePath.equals("no-image")) {
-                        String imagePathWithDir = "images/" + imagePath;
+                        // Ensure the image is loaded from the "images/" folder
+                        String imagePathWithDir = "images/" + imagePath;  // Image path relative to "images/" folder
                         File imageFile = new File(imagePathWithDir);
 
                         if (imageFile.exists()) {
-                            Image image = new Image(imageFile.toURI().toString());
+                            // Create an Image object from the file path
+                            Image image = new Image(imageFile.toURI().toString());  // Convert the file to an image URL
                             ImageView imageView = new ImageView(image);
-                            imageView.setFitHeight(100);  // Set size of the image
+                            imageView.setFitHeight(100);  // Set the image size
                             imageView.setFitWidth(100);
 
-                            // Add ImageView to the VBox
+                            // Add the ImageView to the VBox to display it
                             entryBox.getChildren().add(imageView);
                         } else {
-                            resultsArea.appendText("Image file not found.\n");
+                            resultsArea.appendText("Image file not found: " + imagePathWithDir + "\n");
                         }
+                    } else {
+                        resultsArea.appendText("Image: No image\n");
                     }
 
-                    // Add the VBox (TextArea and ImageView) to your main layout container (VBox)
+                    // Add the VBox (TextArea and ImageView) to the main layout container (VBox)
                     mainLayout.getChildren().add(entryBox);  // Add each entry VBox
                 }
             }
@@ -484,5 +515,193 @@ public class Diary extends Application {
         alert.setTitle(title);
         alert.setContentText(message);
         alert.showAndWait();
+    }
+    
+    private void ensureRecycleBinExists() {
+        File recycleBinDir = new File("recycleBin");
+        if (!recycleBinDir.exists()) {
+            recycleBinDir.mkdir();  // Create the recycle bin directory if it doesn't exist
+        }
+    }
+    
+    private void handleDeleteEntry(String entryToDelete) {
+        try {
+            List<String> allEntries = new ArrayList<>();
+            boolean entryFound = false;
+
+            // Read all entries from the file
+            try (BufferedReader reader = new BufferedReader(new FileReader(ENTRIES_FILE))) {
+                allEntries = reader.lines().collect(Collectors.toList());
+            }
+
+            // Check if the entry is in the list and write updated entries back to the file
+            try (BufferedWriter writer = new BufferedWriter(new FileWriter(ENTRIES_FILE))) {
+                for (String entry : allEntries) {
+                    // Trim both the file entry and the entry to delete for better comparison
+                    if (entry.trim().equals(entryToDelete.trim())) {
+                        // Move the entry to the recycle bin with a timestamp
+                        String timestamp = String.valueOf(System.currentTimeMillis());
+                        File recycleBinFile = new File("recycleBin/deleted_" + timestamp + ".csv");
+
+                        // Ensure the recycle bin directory exists
+                        File recycleBinDir = new File("recycleBin");
+                        if (!recycleBinDir.exists()) {
+                            recycleBinDir.mkdir();
+                        }
+
+                        // Write the entry to the recycle bin file
+                        try (BufferedWriter recycleWriter = new BufferedWriter(new FileWriter(recycleBinFile))) {
+                            recycleWriter.write(entry + "\n");
+                        }
+
+                        entryFound = true; // Mark that the entry was found and deleted
+                    } else {
+                        // Write the remaining entries back to the main file
+                        writer.write(entry + "\n");
+                    }
+                }
+            }
+
+            // Show appropriate message based on whether the entry was found and deleted
+            if (entryFound) {
+                showAlert("Entry Deleted", "The diary entry has been deleted and moved to the recycle bin.");
+                showDiaryScreen(); // Go to the front page after deleting
+            } else {
+                showAlert("Entry Not Found", "The entry you tried to delete was not found.");
+            }
+
+        } catch (IOException e) {
+            showAlert("Error", "Unable to delete entry.");
+        }
+    }
+
+    private void showRecycleBinScreen() {
+        File recycleBinDir = new File("recycleBin");
+        File[] files = recycleBinDir.listFiles();
+
+        VBox layout = new VBox();
+        ListView<String> recycleBinListView = new ListView<>();
+        Button restoreButton = new Button("Restore Entry");
+        Button permanentlyDeleteButton = new Button("Permanently Delete Entry");
+
+        if (files != null) {
+            for (File file : files) {
+                if (file.isFile()) {
+                    String fileName = file.getName();
+                    String preview = getFilePreview(file);
+                    String fileInfo = fileName + " - " + preview;
+                    recycleBinListView.getItems().add(fileInfo);
+                }
+            }
+        }
+
+        restoreButton.setOnAction(e -> {
+            String selectedFile = recycleBinListView.getSelectionModel().getSelectedItem();
+            if (selectedFile != null) {
+                String fileName = selectedFile.split(" ")[0]; // Extract file name
+                restoreEntryFromRecycleBin(fileName);
+            } else {
+                showAlert("No Entry Selected", "Please select an entry to restore.");
+            }
+        });
+
+        permanentlyDeleteButton.setOnAction(e -> {
+            String selectedFile = recycleBinListView.getSelectionModel().getSelectedItem();
+            if (selectedFile != null) {
+                String fileName = selectedFile.split(" ")[0];
+                permanentlyDeleteEntry(fileName);
+            } else {
+                showAlert("No Entry Selected", "Please select an entry to permanently delete.");
+            }
+        });
+
+        Button backToFrontPageButton = new Button("Back to Front Page");
+        backToFrontPageButton.setOnAction(e -> showDiaryScreen());
+        layout.getChildren().addAll(recycleBinListView, restoreButton, permanentlyDeleteButton, backToFrontPageButton);
+        
+        Scene scene = new Scene(layout, 400, 300);
+        primaryStage.setTitle("Recycle Bin");
+        primaryStage.setScene(scene);
+        primaryStage.show();
+    }
+
+    private String getFilePreview(File file) {
+        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+            String line = reader.readLine();
+            if (line != null) {
+                return line.substring(0, Math.min(line.length(), 30)) + "..."; // Preview first 30 characters
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return "No preview available";
+    }
+
+
+
+    
+    private void restoreEntryFromRecycleBin(String fileName) {
+        File recycleBinFile = new File("recycleBin/" + fileName);
+
+        if (recycleBinFile.exists()) {
+            try (BufferedReader reader = new BufferedReader(new FileReader(recycleBinFile))) {
+                String entry = reader.readLine();
+
+                // Add back to the main entries file
+                try (BufferedWriter writer = new BufferedWriter(new FileWriter(ENTRIES_FILE, true))) {
+                    writer.write(entry + "\n");
+                }
+
+                // Delete the entry from the recycle bin after restoring
+                recycleBinFile.delete();
+                showAlert("Entry Restored", "The entry has been restored to your diary.");
+                showDiaryScreen();  // Optionally go back to the diary screen after restoring
+            } catch (IOException e) {
+                showAlert("Error", "Unable to restore the entry.");
+            }
+        } else {
+            showAlert("Error", "The selected entry does not exist.");
+        }
+    }
+
+    
+    private void permanentlyDeleteEntry(String fileName) {
+        File recycleBinFile = new File("recycleBin/" + fileName);
+
+        if (recycleBinFile.exists()) {
+            // Check the age of the file and delete if it's older than 30 days
+            long currentTime = System.currentTimeMillis();
+            long fileTime = Long.parseLong(fileName.split("_")[1].split("\\.")[0]);
+
+            // If the file is older than 30 days, delete permanently
+            if (currentTime - fileTime > 30L * 24 * 60 * 60 * 1000) {
+                recycleBinFile.delete();
+                showAlert("Entry Permanently Deleted", "The entry has been permanently deleted.");
+            } else {
+                showAlert("Entry Not Yet Expired", "This entry has not yet expired. Please try again later.");
+            }
+        } else {
+            showAlert("Error", "The selected entry does not exist.");
+        }
+    }
+    
+    
+
+    
+    private void cleanUpRecycleBin() {
+        File recycleBinDir = new File("recycleBin");
+        File[] files = recycleBinDir.listFiles();
+
+        if (files != null) {
+            for (File file : files) {
+                long currentTime = System.currentTimeMillis();
+                long fileTime = Long.parseLong(file.getName().split("_")[1].split("\\.")[0]);
+
+                // Delete files older than 30 days
+                if (currentTime - fileTime > 30L * 24 * 60 * 60 * 1000) {
+                    file.delete();
+                }
+            }
+        }
     }
 } 

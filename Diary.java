@@ -40,53 +40,111 @@ public class Diary extends Application {
 
     private void showLoginScreen() {
         GridPane grid = new GridPane();
+        grid.setHgap(10);
+        grid.setVgap(10);
+        grid.setPadding(new Insets(20, 20, 20, 20));
 
-        Label usernameLabel = new Label("Username/Email:");
-        TextField usernameField = new TextField();
+        Label usernameOrEmailLabel = new Label("Username/Email:");
+        TextField usernameOrEmailField = new TextField();
         Label passwordLabel = new Label("Password:");
         PasswordField passwordField = new PasswordField();
 
         Button loginButton = new Button("Login");
         Button registerButton = new Button("Register");
 
-        loginButton.setOnAction(e -> handleLogin(usernameField.getText(), passwordField.getText()));
-        registerButton.setOnAction(e -> handleRegister(usernameField.getText(), passwordField.getText()));
+        loginButton.setOnAction(e -> handleLogin(usernameOrEmailField.getText(), passwordField.getText()));
+        registerButton.setOnAction(e -> showRegisterScreen());
 
-        grid.add(usernameLabel, 0, 0);
-        grid.add(usernameField, 1, 0);
+        grid.add(usernameOrEmailLabel, 0, 0);
+        grid.add(usernameOrEmailField, 1, 0);
         grid.add(passwordLabel, 0, 1);
         grid.add(passwordField, 1, 1);
         grid.add(loginButton, 0, 2);
         grid.add(registerButton, 1, 2);
 
-        Scene scene = new Scene(grid, 300, 200);
+        Scene scene = new Scene(grid, 400, 250);
         primaryStage.setTitle("Digital Diary - Login");
         primaryStage.setScene(scene);
         primaryStage.show();
     }
 
-    private void handleLogin(String username, String password) {
+    private void showRegisterScreen() {
+        GridPane grid = new GridPane();
+        grid.setHgap(10);
+        grid.setVgap(10);
+        grid.setPadding(new Insets(20, 20, 20, 20));
+
+        Label usernameLabel = new Label("Username:");
+        TextField usernameField = new TextField();
+        Label emailLabel = new Label("Email:");
+        TextField emailField = new TextField();
+        Label passwordLabel = new Label("Password:");
+        PasswordField passwordField = new PasswordField();
+
+        Button registerButton = new Button("Register");
+        Button backButton = new Button("Back");
+
+        registerButton.setOnAction(e -> handleRegister(usernameField.getText(), emailField.getText(), passwordField.getText()));
+        backButton.setOnAction(e -> showLoginScreen());
+
+        grid.add(usernameLabel, 0, 0);
+        grid.add(usernameField, 1, 0);
+        grid.add(emailLabel, 0, 1);
+        grid.add(emailField, 1, 1);
+        grid.add(passwordLabel, 0, 2);
+        grid.add(passwordField, 1, 2);
+        grid.add(registerButton, 0, 3);
+        grid.add(backButton, 1, 3);
+
+        Scene scene = new Scene(grid, 400, 300);
+        primaryStage.setTitle("Digital Diary - Register");
+        primaryStage.setScene(scene);
+        primaryStage.show();
+    }
+
+    private void handleLogin(String usernameOrEmail, String password) {
         try (BufferedReader reader = new BufferedReader(new FileReader(USER_DATA_FILE))) {
             String line;
             while ((line = reader.readLine()) != null) {
                 String[] userDetails = line.split(",");
-                if ((userDetails[0].equals(username) || userDetails[1].equals(username)) && userDetails[2].equals(password)) {
-                    currentUser = username;
-                    showDiaryScreen();  // Show diary screen on successful login
+                // Check if username or email matches and the password is correct
+                if ((userDetails[0].equals(usernameOrEmail) || userDetails[1].equals(usernameOrEmail)) && userDetails[2].equals(password)) {
+                    currentUser = userDetails[0]; // Set currentUser to the username
+                    showDiaryScreen(); // Show diary screen on successful login
                     return;
                 }
             }
-            showAlert("Login Failed", "Invalid username or password.");
+            showAlert("Login Failed", "Invalid username/email or password.");
         } catch (IOException e) {
             showAlert("Error", "Unable to read user data.");
         }
     }
 
+    private void handleRegister(String username, String email, String password) {
+        if (username.isEmpty() || email.isEmpty() || password.isEmpty()) {
+            showAlert("Error", "All fields (username, email, and password) are required.");
+            return;
+        }
 
-    private void handleRegister(String username, String password) {
+        try (BufferedReader reader = new BufferedReader(new FileReader(USER_DATA_FILE))) {
+            boolean userExists = reader.lines()
+                .anyMatch(line -> {
+                    String[] userDetails = line.split(",");
+                    return userDetails[0].equals(username) || userDetails[1].equals(email);
+                });
+
+            if (userExists) {
+                showAlert("Error", "Username or email is already registered.");
+                return;
+            }
+        } catch (IOException e) {
+            // File might not exist yet, proceed with registration
+        }
+
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(USER_DATA_FILE, true))) {
-            writer.write(username + "," + username + "@example.com," + password + "\n");
+            writer.write(username + "," + email + "," + password + "\n");
             showAlert("Registration Successful", "User registered successfully.");
+            showLoginScreen(); // Go back to login screen after successful registration
         } catch (IOException e) {
             showAlert("Error", "Unable to save user data.");
         }
